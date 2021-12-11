@@ -112,6 +112,7 @@ export default function App() {
     } );
   } else {
     postsManager.unsubscribeFromPosts();
+    updatePosts([])
   }
 
   }, [currentUser])
