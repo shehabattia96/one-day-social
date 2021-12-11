@@ -78,6 +78,8 @@ export default function App() {
 
     postsManager.listenToAuthStateChanged(setCurrentUser)
 
+    if (currentUser) {
+
     postsManager.subscribeToPostsAdded((post) => {
 
       updatePosts( posts => [...posts, post] );
@@ -108,8 +110,11 @@ export default function App() {
       } );
       
     } );
+  } else {
+    postsManager.unsubscribeFromPosts();
+  }
 
-  }, [])
+  }, [currentUser])
 
   function doAction(action:PostActions, data:any) {
 
@@ -148,22 +153,28 @@ export default function App() {
 
   }
 
+
+  console.log('posts:', posts , 'currentUser', currentUser)
+
+
   if (currentUser) {
+
 
     let postsByUserInLast24Hours = posts.filter(post => (post.createdEpoch > (Date.now() - 60 * 60 * 24 * 1000) )  && post.user?.id == currentUser.id)
 
       return (
         <View style={styles.container}>
+
           <div>
             <button onClick={()=>postsManager.signOut()}>Sign Out</button>
           </div>
+
           {
             posts.map( (post) => createPostUI(post, currentUser, doAction) )
           }
-          <div>
-
           
-          {postsByUserInLast24Hours.length === 0  && newPostUI( postsManager, currentUser, isSubmitting, setIsSubmitting, newPost, updateNewPost ) || <p>You've already posted today! Try again at {new Date( postsByUserInLast24Hours[0].createdEpoch + 60 * 60 * 24 * 1000 ).toString()} </p>}
+          <div>
+            {postsByUserInLast24Hours.length === 0  && newPostUI( postsManager, currentUser, isSubmitting, setIsSubmitting, newPost, updateNewPost ) || <p>You've already posted today! Try again at {new Date( postsByUserInLast24Hours[0].createdEpoch + 60 * 60 * 24 * 1000 ).toString()} </p>}
           </div>
         </View>
       );

@@ -166,6 +166,7 @@ function listenToAuthStateChanged(callback: (user?:User)=> void) {
 
 function signOut() {
 
+    console.log("signed out")
     const auth = getAuth();
 
     auth.signOut()
