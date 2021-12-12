@@ -2,7 +2,9 @@
 import { initializeApp } from "firebase/app";
 import { getDatabase, onChildAdded, onChildRemoved, onChildChanged, ref, set, update, remove, Unsubscribe } from 'firebase/database';
 
-import {getAuth, signInWithPopup,  GoogleAuthProvider, onAuthStateChanged} from 'firebase/auth'
+import {getAuth, signInWithRedirect , signInWithCredential, AuthCredential,  GoogleAuthProvider, onAuthStateChanged} from 'firebase/auth'
+import * as Google from 'expo-google-app-auth';
+
 
 
 import { PostsManager } from "./PostsManager";
@@ -137,11 +139,12 @@ function removeComment(postId:string, commentId:string, callback?: (success:bool
 
 function signIn(callback: (user?:User)=> void){
 
-    if (signInWithPopup) {
     const auth = getAuth();
     const provider = new GoogleAuthProvider();
 
-    signInWithPopup(auth, provider)
+    if (signInWithRedirect ) {
+        console.warn("signing in with signInWithRedirect")
+    signInWithRedirect (auth, provider)
     .then((result) => {
         return getCurrentUser(callback);
     }).catch((error) => {
@@ -149,7 +152,13 @@ function signIn(callback: (user?:User)=> void){
         return callback();
     });
     } else {
-        console.error("Can't sign in with popup!")
+        console.warn("signing in with expo")
+
+        Google.logInAsync({androidClientId: "750450825511-j7aic84if8n8p27sq5k6noougf9cgq6m.apps.googleusercontent.com"}).then(({type, accessToken, idToken, refreshToken, user}) => {
+            
+                signInWithCredential(auth, GoogleAuthProvider.credential( idToken, accessToken) ).then( result => { return getCurrentUser(callback)})
+            
+            })
     }
     
 }

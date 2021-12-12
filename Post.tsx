@@ -19,9 +19,11 @@ interface Post {
 interface Comment {
     id:string;
 
-    user:User;
+    user?:User;
     content:string;
     createdEpoch:number;
+
+    postId?:string;
 
     likes:{[username:string]:boolean}
 }
@@ -42,6 +44,85 @@ enum PostActions {
     DISLIKE_COMMENT,
     REMOVE_COMMENT,
     CREATE_COMMENT
+}
+
+
+function newCommentUI(postsManager:PostsManager, currentUser:User, isSubmittingComment:boolean, setIsSubmittingComment: React.Dispatch<React.SetStateAction<boolean>>, newComment:Comment, updateNewComment: React.Dispatch<React.SetStateAction<Comment>>, setNewCommentModalVisible:React.Dispatch<React.SetStateAction<boolean>>) {
+
+  function isPostValid(comment:Comment) {
+
+    if (!comment.user || comment.user.id === "") {
+      return false
+    }
+
+    if (comment.content.length === 0) {
+      return false
+    }
+
+    if (!comment.postId) {
+      return false
+    }
+
+    return true
+
+  }
+
+
+  function onSubmit() {
+
+    if (isSubmittingComment) {
+      return console.log("Already submitting comment!");
+    }
+
+    setIsSubmittingComment(true);
+
+
+    let commentToSubmit = {...newComment, 
+      user: currentUser,
+      createdEpoch: Date.now()
+    };
+
+    if (isPostValid(commentToSubmit)) {
+
+      postsManager.writeComment(newComment.postId!, commentToSubmit, success => {
+        if (success) {
+          updateNewComment({
+            id: uuid.v4().toString(),
+            content: "",
+            createdEpoch: Date.now(),
+            likes: {}
+          })
+          setNewCommentModalVisible(false)
+        } else {
+          console.error("Couldn't write comment!", commentToSubmit)
+        }
+        setIsSubmittingComment(false);
+      });
+
+    } else {
+
+      console.error("Couldn't write comment! Comment is not valid.", commentToSubmit)
+      setIsSubmittingComment(false);
+
+    }
+
+  }
+
+  return (
+    <View style={{margin: 0, marginTop: 10}}>
+
+      <TextInput 
+      placeholder="Comment"
+      editable={!isSubmittingComment}
+      multiline
+      numberOfLines={4}
+      onChangeText={ (value) => { updateNewComment( post => {
+        return {...post, content: value} } ) } }
+      value={newComment.content}
+        />
+      <Button disabled={isSubmittingComment} onPress={onSubmit} title="Submit" />
+    </View>
+  )
 }
 
 function newPostUI(postsManager:PostsManager, currentUser:User, isSubmitting:boolean, setIsSubmitting: React.Dispatch<React.SetStateAction<boolean>>, newPost:Post, updateNewPost: React.Dispatch<React.SetStateAction<Post>>) {
@@ -116,7 +197,10 @@ function newPostUI(postsManager:PostsManager, currentUser:User, isSubmitting:boo
           />
   
         <TextInput 
-        placeholder="My Post!" editable={!isSubmitting}
+        placeholder="My Post!"
+        editable={!isSubmitting}
+        multiline
+        numberOfLines={4}
         onChangeText={ (value) => { updateNewPost( post => {
           return {...post, content: value} } ) } }
         value={newPost.content}
@@ -131,5 +215,6 @@ export {
     Comment,
     User,
     PostActions,
-    newPostUI
+    newPostUI,
+    newCommentUI
 }

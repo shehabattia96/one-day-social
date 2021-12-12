@@ -1,10 +1,10 @@
 import { StatusBar } from 'expo-status-bar';
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, Button } from 'react-native';
+import { StyleSheet, Text, View, Button, FlatList, Modal } from 'react-native';
 import uuid from 'react-native-uuid';
 import { FirebasePostsManager } from './FirebasePosts';
 
-import { Post, Comment, PostActions, User, newPostUI } from "./Post"
+import { Post, Comment, PostActions, User, newPostUI, newCommentUI } from "./Post"
 import { PostsManager } from "./PostsManager"
 
 const postsManager:PostsManager = FirebasePostsManager; 
@@ -17,35 +17,55 @@ function createCommentUI(postId: string, comment:Comment, currentUser:User,  doA
             <Text>{name} on {(new Date(comment.createdEpoch)).toString() }</Text>
             <Text>{comment.content}</Text>
 
+            <View style={styles.fixToText}>
             {comment.user && comment.user.id == currentUser.id &&
-              <Button onPress={() => doAction(PostActions.REMOVE_COMMENT, {postId, comment})} title="Delete" />}
-            <Button onPress={() => doAction(PostActions.LIKE_COMMENT, {postId, comment})} title={`Like: ${Object.keys(comment.likes).filter(likes => comment.likes[likes] == true).length}` } />
-            <Button onPress={() => doAction(PostActions.DISLIKE_COMMENT, {postId, comment})} title={`Dislike: ${Object.keys(comment.likes).filter(likes => comment.likes[likes] == false).length} `} />
+              <Button color="red" onPress={() => doAction(PostActions.REMOVE_COMMENT, {postId, comment})} title="Delete" />}
+            <Button onPress={() => doAction(PostActions.LIKE_COMMENT, {postId, comment})} title={`Like: ${Object.keys(comment.likes || {}).filter(likes => comment.likes[likes] == true).length}` } />
+            <Button onPress={() => doAction(PostActions.DISLIKE_COMMENT, {postId, comment})} title={`Dislike: ${Object.keys(comment.likes || {}).filter(likes => comment.likes[likes] == false).length} `} />
+            </View>
           </View>
 }
 
-function createPostUI(post:Post, currentUser:User, doAction: (action:PostActions, data:any)=>void) {
+function createPostUI(post:Post, currentUser:User, showNewCommentModal: (postId:string)=>void, doAction: (action:PostActions, data:any)=>void) {
 
   let { user: {name = "Anon"} = {}} = post
 
   return  <View key={post.id}>
             <Text style={styles.titleText}>{post.title} </Text>
+            
+            <View style={styles.fixToText}>
+            
+            
             {post.user && post.user.id == currentUser.id &&
               <Button color="red" onPress={() => doAction(PostActions.REMOVE_POST, post)} title="Delete" />}
+
+            </View>
+            
             <Text>Created by {name} on {(new Date(post.createdEpoch)).toString() }</Text>
+            
             <Text>{post.content}</Text>
 
             
-              <View>
-              <Button onPress={() => doAction(PostActions.LIKE_POST, post)} title={`Like: ${Object.keys(post.likes).filter(likes => post.likes[likes] == true).length}` } />
-              <Button onPress={() => doAction(PostActions.DISLIKE_POST, post)} title={`Dislike: ${Object.keys(post.likes).filter(likes => post.likes[likes] == false).length}` } />
+            <View style={styles.fixToText}>
+              <Button onPress={() => doAction(PostActions.LIKE_POST, post)} title={`Like: ${Object.keys(post.likes || {} ).filter(likes => post.likes[likes] == true).length}` } />
+              <Button onPress={() => doAction(PostActions.DISLIKE_POST, post)} title={`Dislike: ${Object.keys(post.likes || {}).filter(likes => post.likes[likes] == false).length}` } />
               
               </View>
             
             
               <View>
-                <Text style={styles.subtitleText}>Comments:</Text>
-                {post.comments && Object.keys(post.comments).map( (commentId) => createCommentUI(post.id, post.comments![commentId], currentUser, doAction) ) || <Text> No comments yet. </Text>}
+                  <Text style={styles.subtitleText}>Comments:</Text>
+                {post.comments && 
+                  <FlatList
+                    data={Object.keys(post.comments)}
+                    renderItem={(item) => createCommentUI(post.id, post.comments![item.item], currentUser, doAction) }
+                  />
+                  || <Text> No comments yet. </Text>
+                  }
+                  
+                <View style={styles.fixToText}>
+                  <Button title="Add comment" onPress={()=>showNewCommentModal(post.id)} />
+                </View>
               </View>
             
           </View>
@@ -69,9 +89,17 @@ export default function App() {
     }
   );
 
-  const [newComments, updateNewComments] = useState<{[postId:string]: Comment}>({});
+  const [newComment, updateNewComment] = useState<Comment>(
+    {
+      id: uuid.v4().toString(),
+      content: "",
+      createdEpoch: Date.now(),
+      likes:{}
+    }
+  );
 
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
+  const [isSubmittingPost, setIsSubmittingPost] = useState<boolean>(false)
+  const [isSubmittingComment, setIsSubmittingComment] = useState<boolean>(false)
 
   
 
@@ -118,6 +146,16 @@ export default function App() {
 
   }, [currentUser])
 
+
+  const [newCommentModalVisible, setNewCommentModalVisible] = useState<boolean>(false);
+
+  function showNewCommentModal(postId:string) {
+    setNewCommentModalVisible(true);
+
+    updateNewComment(comment => {return {...comment, postId}})
+
+  }
+
   function doAction(action:PostActions, data:any) {
 
     if (!currentUser) return console.log("Not signed in!");
@@ -162,17 +200,21 @@ export default function App() {
       return (
         <View style={styles.container}>
 
-          <div>
-            <button onClick={()=>postsManager.signOut()}>Sign Out</button>
-          </div>
-
-          {
-            posts.map( (post) => createPostUI(post, currentUser, doAction) )
-          }
+          <FlatList
+            data={posts}
+            renderItem={(item) => createPostUI(item.item, currentUser, showNewCommentModal,  doAction)}
+          />
           
           <View>
-            {postsByUserInLast24Hours.length === 0  && newPostUI( postsManager, currentUser, isSubmitting, setIsSubmitting, newPost, updateNewPost ) || <Text>You've already posted today! Try again at {new Date( postsByUserInLast24Hours[0].createdEpoch + 60 * 60 * 24 * 1000 ).toString()} </Text>}
+            {postsByUserInLast24Hours.length === 0  && newPostUI( postsManager, currentUser, isSubmittingPost, setIsSubmittingComment, newPost, updateNewPost ) || <Text>You've already posted today! Try again at {new Date( postsByUserInLast24Hours[0].createdEpoch + 60 * 60 * 24 * 1000 ).toString()} </Text>}
           </View>
+          
+          <View>
+            <Button onPress={()=>postsManager.signOut()} title="Sign Out" />
+          </View>
+
+          <Modal visible={newCommentModalVisible}>{newCommentUI(postsManager, currentUser!, isSubmittingComment, setIsSubmittingComment, newComment, updateNewComment, setNewCommentModalVisible)}<Button title="Cancel" onPress={()=>setNewCommentModalVisible(false)}/></Modal>
+
 
         </View>
       );
@@ -202,5 +244,9 @@ const styles = StyleSheet.create({
   subtitleText: {
     fontSize: 20,
     fontWeight: "bold"
-  }
+  },  
+  fixToText: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
 });
