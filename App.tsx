@@ -42,10 +42,9 @@ function createPostUI(post:Post, currentUser:User, showNewCommentModal: (postId:
             </View>
             
             <Text>Created by {name} on {(new Date(post.createdEpoch)).toString() }</Text>
-            
+
             <Text>{post.content}</Text>
 
-            
             <View style={styles.fixToText}>
               <Button onPress={() => doAction(PostActions.LIKE_POST, post)} title={`Like: ${Object.keys(post.likes || {} ).filter(likes => post.likes[likes] == true).length}` } />
               <Button onPress={() => doAction(PostActions.DISLIKE_POST, post)} title={`Dislike: ${Object.keys(post.likes || {}).filter(likes => post.likes[likes] == false).length}` } />
@@ -233,7 +232,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
     padding: 10,
-    alignItems: 'center',
     justifyContent: 'center',
   },
   
