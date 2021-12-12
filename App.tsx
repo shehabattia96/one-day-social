@@ -205,7 +205,7 @@ export default function App() {
           />
           
           <View>
-            {postsByUserInLast24Hours.length === 0  && newPostUI( postsManager, currentUser, isSubmittingPost, setIsSubmittingComment, newPost, updateNewPost ) || <Text>You've already posted today! Try again at {new Date( postsByUserInLast24Hours[0].createdEpoch + 60 * 60 * 24 * 1000 ).toString()} </Text>}
+            {postsByUserInLast24Hours.length === 0  && <View> <Text>Hi {currentUser.name}! Write today's post. You can only write one post per day.</Text> {newPostUI( postsManager, currentUser, isSubmittingPost, setIsSubmittingComment, newPost, updateNewPost )}</View> || <Text>Hi {currentUser.name}! You've already posted today! Try again at {new Date( postsByUserInLast24Hours[0].createdEpoch + 60 * 60 * 24 * 1000 ).toString()} </Text>}
           </View>
           
           <View>
