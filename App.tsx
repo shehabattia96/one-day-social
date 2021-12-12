@@ -1,6 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View, Button } from 'react-native';
 import uuid from 'react-native-uuid';
 import { FirebasePostsManager } from './FirebasePosts';
 
@@ -13,41 +13,42 @@ function createCommentUI(postId: string, comment:Comment, currentUser:User,  doA
 
   let { user: {name = "Anon"} = {}} = comment
 
-  return  <div key={comment.id}>
-            <h3>{name} on {(new Date(comment.createdEpoch)).toString() }</h3>
-            <p>{comment.content}</p>
+  return  <View key={comment.id}>
+            <Text>{name} on {(new Date(comment.createdEpoch)).toString() }</Text>
+            <Text>{comment.content}</Text>
 
             {comment.user && comment.user.id == currentUser.id &&
-              <button onClick={() => doAction(PostActions.REMOVE_COMMENT, comment)}> Delete </button>}
-            <button onClick={() => doAction(PostActions.LIKE_COMMENT, {postId, comment})}> Likes: {Object.keys(comment.likes).filter(likes => comment.likes[likes] == true).length}</button>
-            <button onClick={() => doAction(PostActions.DISLIKE_COMMENT, {postId, comment})}> Dislikes: {Object.keys(comment.likes).filter(likes => comment.likes[likes] == false).length}</button>
-          </div>
+              <Button onPress={() => doAction(PostActions.REMOVE_COMMENT, {postId, comment})} title="Delete" />}
+            <Button onPress={() => doAction(PostActions.LIKE_COMMENT, {postId, comment})} title={`Like: ${Object.keys(comment.likes).filter(likes => comment.likes[likes] == true).length}` } />
+            <Button onPress={() => doAction(PostActions.DISLIKE_COMMENT, {postId, comment})} title={`Dislike: ${Object.keys(comment.likes).filter(likes => comment.likes[likes] == false).length} `} />
+          </View>
 }
 
 function createPostUI(post:Post, currentUser:User, doAction: (action:PostActions, data:any)=>void) {
 
   let { user: {name = "Anon"} = {}} = post
 
-  return  <div key={post.id}>
-            <h1>{post.title} {post.user && post.user.id == currentUser.id &&
-              <button onClick={() => doAction(PostActions.REMOVE_POST, post)}> Delete </button>}</h1>
-            <h5>Created by {name} on {(new Date(post.createdEpoch)).toString() }</h5>
-            <p>{post.content}</p>
+  return  <View key={post.id}>
+            <Text style={styles.titleText}>{post.title} </Text>
+            {post.user && post.user.id == currentUser.id &&
+              <Button color="red" onPress={() => doAction(PostActions.REMOVE_POST, post)} title="Delete" />}
+            <Text>Created by {name} on {(new Date(post.createdEpoch)).toString() }</Text>
+            <Text>{post.content}</Text>
 
             
-              <div>
-              <button onClick={() => doAction(PostActions.LIKE_POST, post)}> Likes: { post.likes && Object.keys(post.likes).filter(likes => post.likes![likes] == true).length || 0 }</button>
-              <button onClick={() => doAction(PostActions.DISLIKE_POST, post)}> Dislikes: { post.likes && Object.keys(post.likes).filter(likes => post.likes![likes] == false).length || 0}</button>
+              <View>
+              <Button onPress={() => doAction(PostActions.LIKE_POST, post)} title={`Like: ${Object.keys(post.likes).filter(likes => post.likes[likes] == true).length}` } />
+              <Button onPress={() => doAction(PostActions.DISLIKE_POST, post)} title={`Dislike: ${Object.keys(post.likes).filter(likes => post.likes[likes] == false).length}` } />
               
-              </div>
+              </View>
             
             
-              <div>
-                Comments:
-                {post.comments && Object.keys(post.comments).map( (commentId) => createCommentUI(post.id, post.comments![commentId], currentUser, doAction) ) || <div> No comments yet. </div>}
-              </div>
+              <View>
+                <Text style={styles.subtitleText}>Comments:</Text>
+                {post.comments && Object.keys(post.comments).map( (commentId) => createCommentUI(post.id, post.comments![commentId], currentUser, doAction) ) || <Text> No comments yet. </Text>}
+              </View>
             
-          </div>
+          </View>
 }
 
 export default function App() {
@@ -154,12 +155,7 @@ export default function App() {
 
   }
 
-
-  console.log('posts:', posts , 'currentUser', currentUser)
-
-
   if (currentUser) {
-
 
     let postsByUserInLast24Hours = posts.filter(post => (post.createdEpoch > (Date.now() - 60 * 60 * 24 * 1000) )  && post.user?.id == currentUser.id)
 
@@ -174,18 +170,18 @@ export default function App() {
             posts.map( (post) => createPostUI(post, currentUser, doAction) )
           }
           
-          <div>
-            {postsByUserInLast24Hours.length === 0  && newPostUI( postsManager, currentUser, isSubmitting, setIsSubmitting, newPost, updateNewPost ) || <p>You've already posted today! Try again at {new Date( postsByUserInLast24Hours[0].createdEpoch + 60 * 60 * 24 * 1000 ).toString()} </p>}
-          </div>
+          <View>
+            {postsByUserInLast24Hours.length === 0  && newPostUI( postsManager, currentUser, isSubmitting, setIsSubmitting, newPost, updateNewPost ) || <Text>You've already posted today! Try again at {new Date( postsByUserInLast24Hours[0].createdEpoch + 60 * 60 * 24 * 1000 ).toString()} </Text>}
+          </View>
+
         </View>
       );
 
   } else {
     return (
       <View style={styles.container}>
-        <button onClick={()=>postsManager.signIn(setCurrentUser)}>Sign in</button>
+        <Button onPress={()=>postsManager.signIn(setCurrentUser)} title="Sign In" />
       </View>
-
     );
   }
 }
@@ -198,7 +194,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  newPostForm: {
-    
+  
+  titleText: {
+    fontSize: 40,
+    fontWeight: "bold"
+  },
+  subtitleText: {
+    fontSize: 20,
+    fontWeight: "bold"
   }
 });

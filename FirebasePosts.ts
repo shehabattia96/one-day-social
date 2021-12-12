@@ -2,7 +2,8 @@
 import { initializeApp } from "firebase/app";
 import { getDatabase, onChildAdded, onChildRemoved, onChildChanged, ref, set, update, remove, Unsubscribe } from 'firebase/database';
 
-import {getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged} from 'firebase/auth'
+import {getAuth, signInWithPopup,  GoogleAuthProvider, onAuthStateChanged} from 'firebase/auth'
+
 
 import { PostsManager } from "./PostsManager";
 import { Post, Comment, User } from "./Post"
@@ -16,6 +17,7 @@ const firebaseConfig = {
   messagingSenderId: "750450825511",
   appId: "1:750450825511:web:237573ab51e0f150e4b102"
 };
+
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
@@ -135,6 +137,7 @@ function removeComment(postId:string, commentId:string, callback?: (success:bool
 
 function signIn(callback: (user?:User)=> void){
 
+    if (signInWithPopup) {
     const auth = getAuth();
     const provider = new GoogleAuthProvider();
 
@@ -145,6 +148,10 @@ function signIn(callback: (user?:User)=> void){
         console.log("Sign in failed. ", error);
         return callback();
     });
+    } else {
+        console.error("Can't sign in with popup!")
+    }
+    
 }
 
 function listenToAuthStateChanged(callback: (user?:User)=> void) {

@@ -1,4 +1,5 @@
 import React from 'react';
+import { StyleSheet, Text, View, Button, TextInput } from 'react-native';
 import uuid from 'react-native-uuid';
 import {PostsManager} from "./PostsManager"
 
@@ -106,22 +107,22 @@ function newPostUI(postsManager:PostsManager, currentUser:User, isSubmitting:boo
     }
   
     return (
-      <div style={{margin: 0, marginTop: 10}}>
-        <input style={{display: "block"}} placeholder="Title" disabled={isSubmitting}
-        onChange={ (e) => { updateNewPost( post => { 
-          let { target: {value = ""} = {}} = e;
+      <View style={{margin: 0, marginTop: 10}}>
+        <TextInput
+        placeholder="Title" editable={!isSubmitting}
+        onChangeText={ (value) => { updateNewPost( post => {
           return {...post, title: value} } ) } } 
           value={newPost.title}
-          ></input>
+          />
   
-        <textarea style={{display: "block"}} placeholder="My Post!" disabled={isSubmitting}
-        onChange={ (e) => { updateNewPost( post => { 
-          let { target: {value = ""} = {}} = e;
+        <TextInput 
+        placeholder="My Post!" editable={!isSubmitting}
+        onChangeText={ (value) => { updateNewPost( post => {
           return {...post, content: value} } ) } }
         value={newPost.content}
-          ></textarea>
-        <button style={{display: "block"}} disabled={isSubmitting} onClick={onSubmit}>Submit</button>
-      </div>
+          />
+        <Button disabled={isSubmitting} onPress={onSubmit} title="Submit" />
+      </View>
     )
   }
 
