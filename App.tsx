@@ -1,7 +1,7 @@
 import { StatusBar } from 'expo-status-bar';
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { v4 as uuidv4 } from 'uuid';
+import uuid from 'react-native-uuid';
 import { FirebasePostsManager } from './FirebasePosts';
 
 import { Post, Comment, PostActions, User, newPostUI } from "./Post"
@@ -58,7 +58,7 @@ export default function App() {
 
   const [newPost, updateNewPost] = useState<Post>(
     {
-      id: uuidv4(),
+      id: uuid.v4().toString(),
       title: "",
       content: "",
       createdEpoch: Date.now(),

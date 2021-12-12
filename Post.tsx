@@ -1,5 +1,5 @@
 import React from 'react';
-import { v4 as uuidv4 } from 'uuid';
+import uuid from 'react-native-uuid';
 import {PostsManager} from "./PostsManager"
 
 interface Post {
@@ -83,7 +83,7 @@ function newPostUI(postsManager:PostsManager, currentUser:User, isSubmitting:boo
         postsManager.writePost(postToSubmit, success => {
           if (success) {
             updateNewPost({
-              id: uuidv4(),
+              id: uuid.v4().toString(),
               title: "",
               content: "",
               createdEpoch: Date.now(),
