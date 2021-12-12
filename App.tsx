@@ -183,7 +183,7 @@ export default function App() {
         break;
       case PostActions.REMOVE_COMMENT:
         if (comment.user && comment.user.id ==  currentUser.id ) {
-          postsManager.removeComment(postId, comment)
+          postsManager.removeComment(postId, comment.id)
         }
         break;
       case PostActions.CREATE_COMMENT:
@@ -232,7 +232,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
     padding: 10,
-    justifyContent: 'center',
   },
   
   titleText: {

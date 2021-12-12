@@ -131,7 +131,7 @@ function removePost(postId:string, callback?: (success:boolean)=> void) {
 
 function removeComment(postId:string, commentId:string, callback?: (success:boolean)=> void) {
     
-    const commentPath = ref(database, databasePostsPath + '/' + postId + '/' + commentId);
+    const commentPath = ref(database, databasePostsPath + '/' + postId + '/comments/' + commentId);
 
     remove( commentPath ).then( (error) => { if (callback) callback(error == null); } );
     
@@ -143,7 +143,6 @@ function signIn(callback: (user?:User)=> void){
     const provider = new GoogleAuthProvider();
 
     if (signInWithRedirect ) {
-        console.warn("signing in with signInWithRedirect")
     signInWithRedirect (auth, provider)
     .then((result) => {
         return getCurrentUser(callback);
@@ -154,8 +153,8 @@ function signIn(callback: (user?:User)=> void){
     } else {
         console.warn("signing in with expo")
 
-        Google.logInAsync({androidClientId: "750450825511-j7aic84if8n8p27sq5k6noougf9cgq6m.apps.googleusercontent.com"}).then(({type, accessToken, idToken, refreshToken, user}) => {
-            
+        Google.logInAsync({androidClientId: "750450825511-j7aic84if8n8p27sq5k6noougf9cgq6m.apps.googleusercontent.com"}).then((result) => {
+                let {type, accessToken, idToken, refreshToken, user} = result as any;
                 signInWithCredential(auth, GoogleAuthProvider.credential( idToken, accessToken) ).then( result => { return getCurrentUser(callback)})
             
             })
